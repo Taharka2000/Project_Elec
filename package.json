@@ -88,10 +88,14 @@
       ".next/**/*",
       "public/**/*",
       ".env*",
-      "next.config.mjs"
+      "next.config.mjs",
+      "node_modules/next/**/*",
+      "node_modules/react/**/*",
+      "node_modules/react-dom/**/*"
     ],
     "asarUnpack": [
-      ".next/**/*"
+      ".next/**/*",
+      "node_modules/next/**/*"
     ],
     "win": {
       "target": [
