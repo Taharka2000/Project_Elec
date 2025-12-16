@@ -5,7 +5,8 @@ import next from 'next';
 import path from "path";
 import { fileURLToPath } from "url";
 import net from "net";
-import { autoUpdater } from "electron-updater";
+import pkg from 'electron-updater';
+const { autoUpdater } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,7 +54,7 @@ autoUpdater.on('download-progress', (progressObj) => {
   console.log(message);
 });
 
-autoUpdater.on('update-downloaded', (info) => {
+autoUpdater.on('update-downloaded', () => {
   console.log('Mise à jour téléchargée');
 
   dialog.showMessageBox(mainWindow, {

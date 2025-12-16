@@ -20,7 +20,8 @@
     "dist:mac": "electron-builder --mac",
     "dist:mac-universal": "electron-builder --mac --universal",
     "dist:win": "electron-builder --win",
-    "dist:all": "electron-builder -mw"
+    "dist:linux": "electron-builder --linux",
+    "dist:all": "electron-builder -mwl"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
