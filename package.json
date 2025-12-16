@@ -85,17 +85,13 @@
     "files": [
       "main.js",
       "package.json",
-      "package-lock.json",
       ".next/**/*",
-      "node_modules/**/*",
       "public/**/*",
-      "src/**/*",
       ".env*",
       "next.config.mjs"
     ],
     "asarUnpack": [
-      ".next/**/*",
-      "node_modules/**/*"
+      ".next/**/*"
     ],
     "win": {
       "target": [
