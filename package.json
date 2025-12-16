@@ -8,7 +8,7 @@
   "main": "main.js",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/post-build.js",
     "lint": "next lint",
     "export": "next export",
     "start": "next start",
@@ -67,6 +67,7 @@
     "electron-builder": "^25.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
+    "fs-extra": "^11.3.2",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.4",
     "typescript": "^5.9.3"
@@ -85,17 +86,13 @@
     "files": [
       "main.js",
       "package.json",
-      ".next/**/*",
+      ".next/standalone/**/*",
+      ".next/static/**/*",
       "public/**/*",
-      ".env*",
-      "next.config.mjs",
-      "node_modules/next/**/*",
-      "node_modules/react/**/*",
-      "node_modules/react-dom/**/*"
+      ".env*"
     ],
     "asarUnpack": [
-      ".next/**/*",
-      "node_modules/next/**/*"
+      ".next/standalone/**/*"
     ],
     "win": {
       "target": [

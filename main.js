@@ -1,7 +1,5 @@
 import { app, BrowserWindow, dialog } from "electron";
-import { createServer } from 'http';
-import { parse } from 'url';
-import next from 'next';
+import { spawn } from 'child_process';
 import path from "path";
 import { fileURLToPath } from "url";
 import net from "net";
@@ -12,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let mainWindow;
-let httpServer;
+let serverProcess;
 const PORT = 3000;
 
 // Configuration de l'autoUpdater
@@ -100,20 +98,17 @@ function startNextServer() {
     console.log("Is packaged:", app.isPackaged);
     console.log("Is dev:", isDev);
 
-    // Déterminer le chemin de travail
-    const dir = app.isPackaged
-      ? __dirname.replace('app.asar', 'app.asar.unpacked')
-      : __dirname;
+    if (isDev) {
+      // Mode développement: utiliser next dev
+      const { createServer } = await import('http');
+      const { parse } = await import('url');
+      const next = (await import('next')).default;
 
-    console.log("Working directory:", dir);
-
-    try {
-      // Créer l'application Next.js
       const nextApp = next({
-        dev: isDev,
+        dev: true,
         hostname: 'localhost',
         port: PORT,
-        dir: dir
+        dir: __dirname
       });
 
       const handle = nextApp.getRequestHandler();
@@ -121,7 +116,7 @@ function startNextServer() {
       await nextApp.prepare();
       console.log("Next.js prepared successfully");
 
-      httpServer = createServer(async (req, res) => {
+      const httpServer = createServer(async (req, res) => {
         try {
           const parsedUrl = parse(req.url, true);
           await handle(req, res, parsedUrl);
@@ -141,9 +136,56 @@ function startNextServer() {
         console.log(`> Ready on http://localhost:${PORT}`);
         resolve();
       });
-    } catch (error) {
-      console.error("Failed to start Next.js server:", error);
-      reject(error);
+    } else {
+      // Mode production: utiliser le serveur standalone
+      const standaloneDir = path.join(__dirname, '.next', 'standalone');
+      const serverPath = path.join(standaloneDir, 'server.js');
+
+      console.log("Standalone directory:", standaloneDir);
+      console.log("Server path:", serverPath);
+
+      // Définir les variables d'environnement pour le serveur Next.js
+      const env = {
+        ...process.env,
+        PORT: PORT.toString(),
+        HOSTNAME: 'localhost',
+        NODE_ENV: 'production'
+      };
+
+      // Lancer le serveur Next.js standalone
+      serverProcess = spawn(process.execPath, [serverPath], {
+        cwd: standaloneDir,
+        env: env,
+        stdio: 'inherit'
+      });
+
+      serverProcess.on('error', (err) => {
+        console.error('Failed to start server:', err);
+        reject(err);
+      });
+
+      serverProcess.on('exit', (code) => {
+        if (code !== 0) {
+          console.error(`Server exited with code ${code}`);
+        }
+      });
+
+      // Attendre que le serveur soit prêt
+      let retries = 0;
+      const maxRetries = 30;
+      const checkServer = setInterval(async () => {
+        retries++;
+        const available = !(await isPortAvailable(PORT));
+
+        if (available) {
+          clearInterval(checkServer);
+          console.log(`> Server ready on http://localhost:${PORT}`);
+          resolve();
+        } else if (retries >= maxRetries) {
+          clearInterval(checkServer);
+          reject(new Error('Server failed to start in time'));
+        }
+      }, 100);
     }
   });
 }
@@ -192,8 +234,8 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
-  if (httpServer) {
-    httpServer.close();
+  if (serverProcess) {
+    serverProcess.kill();
   }
   if (process.platform !== "darwin") app.quit();
 });
@@ -203,7 +245,7 @@ app.on("activate", () => {
 });
 
 app.on("before-quit", () => {
-  if (httpServer) {
-    httpServer.close();
+  if (serverProcess) {
+    serverProcess.kill();
   }
 });
