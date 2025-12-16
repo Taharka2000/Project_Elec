@@ -1,6 +1,8 @@
 {
   "name": "frontend",
   "version": "1.0.0",
+  "description": "Dioko Actionnaire - A financial management application for shareholders",
+  "author": "Taharka <sammbasow1999@gmail.com>",
   "private": true,
   "type": "module",
   "main": "main.js",
